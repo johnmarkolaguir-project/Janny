@@ -1,56 +1,262 @@
-# Welcome to your Expo app 👋
+# Quiz Quest
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A cross-platform quiz app built with **Expo (SDK 57)**, **Expo Router** and **TypeScript**. Pick a topic, choose a difficulty, answer five timed questions and chase your best score — on iOS, Android and the web.
 
-## Get started
+## Table of contents
 
-1. Install dependencies
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Setup](#setup)
+- [Usage](#usage)
+- [Project structure](#project-structure)
+- [API](#api)
+- [Scripts](#scripts)
+- [Configuration](#configuration)
+- [License](#license)
 
-   ```bash
-   npm install
-   ```
+## Features
 
-2. Start the app
+- **5 quiz categories** — Science Lab, History Hall, Deep Space, Geo Dash and Wild Planet.
+- **3 difficulty levels** — Easy (10 pts), Medium (20 pts), Hard (30 pts), each with its own per-question timer (20s / 15s / 12s).
+- **Per-question countdown** — running out of time counts as a miss and the round moves on.
+- **Full answer review** — the result screen shows every question, your answer and the correct one.
+- **Score history** — rounds, best percentage and total points, with a "clear history" option.
+- **Player profile** — a name you type once is stored in the shared store and reused on every attempt.
+- **Light & dark mode** — follows the system color scheme on every platform.
+- **Works offline** — quiz questions ship inside the app; only the optional Learn-tab demo needs a network.
+- **Educational "Learn" tab** — live demos of component lifecycle and a real API request with idle/loading/success/error states.
 
-   ```bash
-   npx expo start
-   ```
+## Tech stack
 
-In the output, you'll find options to open the app in a
+| Layer     | Choice |
+|-----------|--------|
+| Framework | [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/) (React Native 0.86, React 19) |
+| Routing   | [Expo Router](https://docs.expo.dev/router/introduction/) (file-based, typed routes) |
+| Language  | TypeScript (strict mode) |
+| Animation | `react-native-reanimated` + `react-native-worklets` |
+| Tabs      | Native tabs on iOS/Android, headless tab bar on web |
+| Linting   | ESLint (`eslint-config-expo`) |
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Setup
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Prerequisites
 
-## Get a fresh project
+- **Node.js** 20 or newer
+- **npm** (the repo ships a `package-lock.json`)
+- For native runs: the [Expo Go](https://expo.dev/go) app on your phone, or an iOS Simulator / Android emulator
 
-When you're ready, run:
+### 1. Install dependencies
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Start the dev server
 
-### Other setup steps
+```bash
+npx expo start
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+From the terminal output you can open the app in:
 
-## Learn more
+- a **development build** — https://docs.expo.dev/develop/development-builds/introduction/
+- the **Android emulator** — https://docs.expo.dev/workflow/android-studio-emulator/
+- the **iOS simulator** — https://docs.expo.dev/workflow/ios-simulator/
+- **Expo Go** by scanning the QR code — https://expo.dev/go
+- the **web** by pressing `w`
 
-To learn more about developing your project with Expo, look at the following resources:
+### 3. Verify the code (optional)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm run lint      # ESLint
+npx tsc --noEmit  # type-check
+```
 
-## Join the community
+## Usage
 
-Join our community of developers creating universal apps.
+The app has three tabs and two stack screens.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Play tab (`/`)
+
+1. Type your **name** (required — the Play button validates it).
+2. Pick a **difficulty** chip: Easy / Medium / Hard. Each chip shows the points per question.
+3. Choose one of the five quizzes. Each row shows how many questions exist at the selected difficulty.
+4. Press **Play** to open `/quiz/[id]?difficulty=<level>`.
+
+### Quiz screen (`/quiz/[id]`)
+
+- 5 questions per round, shuffled from the bundled question bank.
+- A countdown timer runs per question; at 0s the answer is locked as a miss.
+- Tapping an option immediately locks it and highlights **Correct** / **Missed**.
+- **Next question** advances; on the last question it becomes **See results**.
+- **Quit round** returns to the first tab without recording anything.
+
+### Result screen (`/result/[id]`)
+
+- Shows your percentage, a headline (Champion! / Nice run! / Worth another try), correct count and points.
+- Reviews every question with your answer and the correct answer.
+- **Play this round again** restarts the same quiz at the same difficulty.
+
+### Scores tab (`/scores`)
+
+- Lists every finished round (quiz, player, difficulty, time, score, percentage).
+- Summary row: rounds played, best percentage, total points.
+- **Clear history** empties the store.
+
+### Learn tab (`/learn`)
+
+- Explains the five ideas behind the app (state, navigation, passing data, lifecycle, API requests) with two interactive demos: a lifecycle logger and a live API fetch.
+
+State (name, difficulty, attempt history) lives in a `QuizProvider` context and survives navigation, but **not** a full app reload — history is in-memory only.
+
+## Project structure
+
+```
+.
+├── app.json                  # Expo config (name, icons, splash, plugins, experiments)
+├── assets/                   # images, icons, splash assets
+├── scripts/
+│   └── reset-project.js      # moves starter code aside for a fresh start
+└── src/
+    ├── app/                  # routes — every file is a screen
+    │   ├── _layout.tsx       # root stack: QuizProvider + theme + splash overlay
+    │   ├── (tabs)/
+    │   │   ├── _layout.tsx   # tab navigator (Play, Scores, Learn)
+    │   │   ├── index.tsx     # Play screen
+    │   │   ├── scores.tsx    # score history
+    │   │   └── learn.tsx     # theory + live demos
+    │   ├── quiz/[id].tsx     # quiz runner with timer
+    │   └── result/[id].tsx   # answer review + score
+    ├── components/           # reusable UI (buttons, themed text/view, tabs, labs)
+    ├── constants/            # theme spacing/colors, brand palette
+    ├── data/questions.ts     # question bank + quiz builder
+    ├── hooks/
+    │   ├── quiz-store.tsx    # shared QuizProvider / useQuiz store
+    │   └── use-theme.ts      # current theme values
+    └── global.css            # web/global styles
+```
+
+Path alias: `@/` maps to `src/` (and `@/assets/` to `assets/`) — see `tsconfig.json`.
+
+## API
+
+### External: Open Trivia Database
+
+The Learn tab's **Live request** demo calls a public REST endpoint:
+
+```
+GET https://opentdb.com/api.php?amount=1&type=multiple
+```
+
+Response shape used by the app (`src/components/api-request-lab.tsx`):
+
+```jsonc
+{
+  "response_code": 0,
+  "results": [
+    {
+      "question": "Which ...?",
+      "category": "General Knowledge",
+      "difficulty": "easy",
+      "correct_answer": "...",
+      "incorrect_answers": ["...", "...", "..."]
+    }
+  ]
+}
+```
+
+Details:
+
+- Requests are cancelled with an `AbortController` on unmount or when a new fetch starts, so a late response never calls `setState`.
+- The state machine is a single discriminated union: `idle | loading | success | error` (success also records elapsed ms).
+- HTML entities in the payload are decoded client-side (`&quot;`, `&#039;`, `&amp;`, `&lt;`, `&gt;`).
+- **The game itself never depends on this endpoint** — all quiz questions are bundled in `src/data/questions.ts`.
+
+### Internal API
+
+**`src/data/questions.ts`**
+
+```ts
+type Difficulty = 'easy' | 'medium' | 'hard';
+type Question = { id; categoryId; difficulty; prompt; options: string[]; answer: number };
+type Quiz = { id; name; tagline; emoji; categoryId };
+
+getQuiz(quizId): Quiz
+buildQuiz(quizId, difficulty, count = 5): Question[]
+countFor(quizId, difficulty): number
+isDifficulty(value): value is Difficulty
+shuffle<T>(items): T[]
+
+DIFFICULTIES: Difficulty[]
+DIFFICULTY_LABEL: Record<Difficulty, string>
+DIFFICULTY_POINTS: Record<Difficulty, number>
+QUIZ_LENGTH = 5
+QUIZZES: Quiz[]
+```
+
+**`src/hooks/quiz-store.tsx`**
+
+```ts
+<QuizProvider>
+useQuiz(): {
+  playerName: string;
+  difficulty: Difficulty;
+  attempts: Attempt[];
+  setPlayerName(name): void;
+  setDifficulty(level): void;
+  recordAttempt({ quizId, difficulty, answers, name? }): Attempt;
+  getAttempt(attemptId): Attempt | undefined;
+  clearAttempts(): void;
+}
+
+scorePercent(attempt): number
+
+type Attempt = {
+  id; name; quizId; quizName; quizEmoji;
+  difficulty; correct; total; score;
+  answers: AnswerRecord[];
+  playedAt: number;
+};
+```
+
+`useQuiz()` throws outside `QuizProvider`.
+
+### Routes
+
+| Route            | Params               | Purpose |
+|------------------|----------------------|---------|
+| `/`              | —                    | Play tab: player name, difficulty, quiz list |
+| `/scores`        | —                    | Score history |
+| `/learn`         | —                    | Theory + interactive demos |
+| `/quiz/[id]`     | `id`, `difficulty`   | Quiz runner |
+| `/result/[id]`   | `id` (attempt id)    | Answer review |
+
+Typed routes are enabled (`experiments.typedRoutes`), so route strings are checked by TypeScript.
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm start` / `npx expo start` | Start the Metro dev server |
+| `npm run android` | Start and open on Android |
+| `npm run ios` | Start and open on iOS |
+| `npm run web` | Start on the web |
+| `npm run lint` | Run ESLint via `expo lint` |
+| `npx tsc --noEmit` | Type-check |
+| `npm run reset-project` | Move starter code to `app-example/` and scaffold a blank app |
+
+## Configuration
+
+All app configuration lives in `app.json`:
+
+- `name`: **Quiz Quest**, `slug`: `Janny`, `scheme`: `janny` (deep links use `janny://`)
+- Portrait-only orientation, automatic (light/dark) UI style
+- Splash screen and per-platform icons/adaptive icons under `assets/`
+- Plugins: `expo-router`, `expo-splash-screen`
+- Experiments: `typedRoutes`, `reactCompiler`
+
+`ios/` and `android/` directories are generated (Continuous Native Generation) — never edit them by hand.
+
+## License
+
+[MIT](./LICENSE)
