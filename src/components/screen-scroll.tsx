@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Footer } from '@/components/footer';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -29,7 +30,10 @@ export function ScreenScroll({ children, withTabInset = true }: ScreenScrollProp
       style={[styles.scrollView, { backgroundColor: theme.background }]}
       contentContainerStyle={[styles.content, { paddingBottom: bottomPadding }]}
       keyboardShouldPersistTaps="handled">
-      <View style={[styles.inner, { paddingTop: topPadding }]}>{children}</View>
+      <View style={[styles.inner, { paddingTop: topPadding }]}>
+        {children}
+        <Footer />
+      </View>
     </ScrollView>
   );
 }
